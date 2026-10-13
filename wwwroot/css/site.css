@@ -1,0 +1,108 @@
+/* ESTRUCTURA PRINCIPAL */
+html, body {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7fb; /* Gris muy suave para el fondo */
+    overflow-x: hidden; /* Evitar scroll horizontal */
+}
+
+/* WRAPPER: Contenedor flexible para Sidebar + Contenido */
+.d-flex#wrapper {
+    width: 100%;
+    height: 100vh; /* Ocupa toda la altura */
+}
+
+/* SIDEBAR: La barra lateral */
+#sidebar-wrapper {
+    min-width: 260px;
+    max-width: 260px;
+    background-color: #0f172a; /* Gris pizarra corporativo */
+    color: #fff;
+    transition: margin 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cabecera del Sidebar (Logo) */
+.sidebar-heading {
+    padding: 1.5rem 1.25rem;
+    font-size: 1.4rem;
+    font-weight: bold;
+    background-color: #111827;
+    color: #3b82f6;
+    border-bottom: 1px solid #1e293b;
+    text-align: center;
+}
+
+/* Estilos de los enlaces del menú */
+.list-group-item {
+    background-color: transparent;
+    color: #cfd2d6; /* Texto gris claro */
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.list-group-item:hover {
+    background-color: #1e293b;
+    color: #fff;
+    padding-left: 2rem; /* Efecto de desplazamiento al pasar mouse */
+}
+
+.list-group-item i {
+    width: 25px; /* Ancho fijo para iconos para alinear texto */
+    text-align: center;
+    margin-right: 10px;
+}
+
+/* Enlace activo (opcional si lo manejas con JS, pero visualmente útil) */
+.list-group-item.active {
+    background-color: #2563eb;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Separadores o Títulos pequeños en el menú */
+.sidebar-separator {
+    padding: 1rem 1.5rem 0.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6c757d;
+    font-weight: bold;
+}
+
+/* CONTENIDO PRINCIPAL */
+#page-content-wrapper {
+    width: 100%;
+    overflow-y: auto; /* El contenido hace scroll, el menú no */
+    height: 100vh;
+}
+
+/* Barra superior blanca (Navbar del contenido) */
+.navbar-light {
+    background-color: #fff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+}
+
+/* FOOTER */
+footer {
+    background-color: #fff;
+    padding: 15px;
+    font-size: 0.9rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* RESPONSIVE: Ocultar sidebar en móviles */
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: -260px; /* Lo escondemos a la izquierda */
+        position: fixed;
+        z-index: 1000;
+        height: 100%;
+    }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0; /* Al activar, aparece */
+    }
+}

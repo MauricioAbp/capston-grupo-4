@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Respaldos y Seguridad";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="text-primary"><i class="fas fa-shield-alt me-2"></i>Seguridad y Respaldos</h2>
+        <p class="text-muted">Protege tu información o reinicia tu negocio como nuevo.</p>
+    </div>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i> @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- COPIA DE SEGURIDAD -->
+    <div class="col-md-6">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h5 class="mb-0 fw-bold text-success"><i class="fas fa-download me-2"></i>Copia de Seguridad</h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <p class="text-muted mb-4">Genera un archivo seguro de tu base de datos actual para respaldar todas tus ventas, inventario y catálogos físicamente en tu PC.</p>
+                
+                <form asp-action="DownloadBackup" method="post">
+                    <button type="submit" class="btn btn-success w-100 btn-lg shadow-sm">
+                        <i class="fas fa-file-archive me-2"></i> Generar y Descargar (.bak)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESTAURAR SISTEMA -->
+    <div class="col-md-6">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-upload me-2"></i>Restaurar Copia</h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <p class="text-muted mb-3">Si tienes un archivo de respaldo (<code>.bak</code>), súbelo aquí. <strong class="text-danger">Advertencia:</strong> Esto reemplazará toda la información actual.</p>
+                
+                <form asp-action="Restore" method="post" enctype="multipart/form-data">
+                    <div class="input-group mb-3">
+                        <input type="file" name="backupFile" class="form-control" accept=".bak" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 btn-lg shadow-sm" onclick="return confirm('¿Estás SEGURO de reemplazar la base de datos actual? Esta acción no se puede deshacer.');">
+                        <i class="fas fa-sync-alt me-2"></i> Subir y Restaurar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESETEO DE FÁBRICA -->
+    <div class="col-md-12">
+        <div class="card bg-danger bg-opacity-10 border-danger border-opacity-25 shadow-sm mt-2">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h5 class="fw-bold text-danger"><i class="fas fa-skull-crossbones me-2"></i>Reseteo de Fábrica (Borrado Total)</h5>
+                    <p class="mb-0 text-dark opacity-75">Esta acción eliminará absolutamente todas tus <strong>Ventas, Compras, Inventario, Productos, Clientes y Categorías</strong>. Únicamente sobrevivirá tu configuración de logotipos, moneda de tu empresa y el inicio de sesión.</p>
+                </div>
+                <form asp-action="FactoryReset" method="post">
+                    <button type="submit" class="btn btn-danger btn-lg shadow" onclick="return confirm('¡ÚLTIMA ADVERTENCIA!\n\n¿Estás completamente seguro de borrar tu sistema desde cero? Se perderán años de datos.');">
+                        <i class="fas fa-trash-alt me-2"></i> INICIAR RESETEO
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

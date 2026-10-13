@@ -1,0 +1,400 @@
+@model MiniMarket.Web.Models.Venta
+
+@{
+    ViewData["Title"] = "Punto de Venta";
+}
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card shadow border-0 mb-3" style="min-height: 500px;">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-barcode me-2"></i> SCANNER / BUSCADOR</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Buscar Producto:</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <select id="cboProducto" class="form-select" style="width: 85%;"></select>
+                    </div>
+                    <small class="text-muted">Escriba nombre o código...</small>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">PRECIO UNIT.</label>
+                        <div class="input-group">
+                            <span class="input-group-text">S/.</span>
+                            <input type="text" class="form-control bg-white fw-bold" id="txtPrecio" readonly>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">STOCK DISP.</label>
+                        <input type="text" class="form-control bg-white text-center" id="txtStock" readonly>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cantidad:</label>
+                    <input type="number" class="form-control form-control-lg text-center fw-bold text-primary" id="txtCantidad" value="1" min="1">
+                </div>
+
+                <div class="d-grid">
+                    <button class="btn btn-success btn-lg" id="btnAgregar">
+                        <i class="fas fa-cart-plus me-2"></i> AGREGAR
+                    </button>
+                </div>
+                
+                <hr class="my-4"/>
+                
+                <div class="bg-light p-3 rounded text-center border">
+                    <small class="text-muted d-block fw-bold">TOTAL A PAGAR</small>
+                    <h1 class="display-4 fw-bold text-success m-0" id="lblTotalGrande">S/. 0.00</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow border-0" style="min-height: 500px;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i> Carrito</h5>
+                <span class="badge bg-white text-primary" id="badgeCount">0 items</span>
+            </div>
+            <div class="card-body p-0 d-flex flex-column">
+                
+                <div class="table-responsive flex-grow-1" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="ps-3">Producto</th>
+                                <th class="text-center" style="width: 80px;">Cant.</th>
+                                <th class="text-end" style="width: 100px;">Precio</th>
+                                <th class="text-end" style="width: 100px;">Subtotal</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaDetalle">
+                        </tbody>
+                    </table>
+                    
+                    <div id="emptyState" class="text-center py-5 mt-5">
+                        <i class="fas fa-shopping-basket fa-4x text-muted opacity-25 mb-3"></i>
+                        <h5 class="text-muted">El carrito está vacío</h5>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light border-top mt-auto">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">CLIENTE:</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fas fa-user"></i></span>
+                            <select id="cboCliente" class="form-select" style="width: 80%;"></select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">MÉTODO DE PAGO:</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodoPago" id="pagoEfectivo" value="Efectivo" checked>
+                                <label class="form-check-label" for="pagoEfectivo"><i class="fas fa-money-bill-wave text-success me-1"></i>Efectivo</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodoPago" id="pagoTarjeta" value="Tarjeta">
+                                <label class="form-check-label" for="pagoTarjeta"><i class="fas fa-credit-card text-primary me-1"></i>Tarjeta</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodoPago" id="pagoYape" value="Yape">
+                                <label class="form-check-label" for="pagoYape"><i class="fas fa-mobile-alt text-info me-1"></i>Yape</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodoPago" id="pagoPlin" value="Plin">
+                                <label class="form-check-label" for="pagoPlin"><i class="fas fa-mobile-alt text-warning me-1"></i>Plin</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="panelEfectivo" class="row g-2 mb-3 bg-light p-2 border rounded mx-0">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-muted">RECIBIDO (S/.):</label>
+                            <input type="number" id="txtMontoRecibido" class="form-control text-end fw-bold text-success" step="0.50" min="0" placeholder="0.00">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-muted">VUELTO (S/.):</label>
+                            <input type="text" id="txtVuelto" class="form-control text-end fw-bold text-danger bg-white" readonly value="0.00">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">DESCUENTO (S/.):</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-danger"><i class="fas fa-minus-circle"></i></span>
+                            <input type="number" id="txtDescuento" class="form-control text-end text-danger fw-bold" value="0.00" step="0.50" min="0">
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-lg" id="btnTerminar">
+                            <i class="fas fa-check-circle me-2"></i> PROCESAR VENTA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Variables globales
+        let _productosLista = [];
+        let _subtotal = 0;
+        let _descuento = 0;
+        let _total = 0;
+
+        $(document).ready(function() {
+            
+            // 1. SELECT2 PRODUCTOS
+            $('#cboProducto').select2({
+                ajax: {
+                    url: '@Url.Action("BuscarProductos", "Ventas")',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { term: params.term }; },
+                    processResults: function (data) { return { results: data.results }; }
+                },
+                placeholder: 'Buscar producto...',
+                minimumInputLength: 1,
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: { noResults: () => "No encontrado", searching: () => "Buscando..." }
+            });
+
+            // 2. SELECT2 CLIENTES
+            $('#cboCliente').select2({
+                ajax: {
+                    url: '@Url.Action("BuscarClientes", "Ventas")',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { term: params.term }; },
+                    processResults: function (data) { return { results: data.results }; }
+                },
+                placeholder: 'Público General',
+                allowClear: true,
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+
+            // 3. EVENTO AL SELECCIONAR PRODUCTO
+            $('#cboProducto').on('select2:select', function (e) {
+                var data = e.params.data;
+                $('#txtPrecio').val(data.precio.toFixed(2));
+                $('#txtStock').val(data.stock);
+                $('#txtCantidad').focus();
+            });
+
+            // 4. BOTÓN AGREGAR
+            $('#btnAgregar').click(function() {
+                // Obtener datos
+                var id = $('#cboProducto').val();
+                var nombre = $('#cboProducto option:selected').text();
+                var precio = parseFloat($('#txtPrecio').val());
+                var stock = parseInt($('#txtStock').val());
+                var cantidad = parseInt($('#txtCantidad').val());
+
+                // Validaciones
+                if (!id) { Swal.fire('Aviso', 'Seleccione un producto', 'warning'); return; }
+                if (isNaN(cantidad) || cantidad < 1) { Swal.fire('Aviso', 'Cantidad incorrecta', 'warning'); return; }
+                if (stock < cantidad) { Swal.fire('Stock Insuficiente', `Solo quedan ${stock} unidades`, 'error'); return; }
+
+                // Verificar si ya existe en carrito
+                var existe = _productosLista.find(x => x.ProductoId == id);
+                if (existe) {
+                    if (stock < (existe.Cantidad + cantidad)) {
+                        Swal.fire('Stock Insuficiente', 'No hay suficiente stock para agregar más.', 'error');
+                        return;
+                    }
+                    existe.Cantidad += cantidad;
+                    existe.Total = existe.Cantidad * existe.Precio;
+                } else {
+                    _productosLista.push({
+                        ProductoId: id,
+                        Nombre: nombre.split('|')[0].trim(), // Limpiamos el texto del select2
+                        Precio: precio,
+                        Cantidad: cantidad,
+                        Total: cantidad * precio
+                    });
+                }
+
+                // Limpiar y Renderizar
+                $('#cboProducto').val(null).trigger('change');
+                $('#txtPrecio').val('');
+                $('#txtStock').val('');
+                $('#txtCantidad').val(1);
+                
+                renderizarCarrito();
+            });
+
+            // COMPOSICIÓN DINÁMICA DE DESCUENTO
+            $('#txtDescuento').on('input', function() {
+                let valor = parseFloat($(this).val());
+                if(isNaN(valor) || valor < 0) {
+                    _descuento = 0;
+                } else {
+                    _descuento = valor;
+                }
+                renderizarCarrito();
+            });
+
+            // LÓGICA VUELTO DE EFECTIVO
+            $('input[name="metodoPago"]').change(function() {
+                if (this.value === 'Efectivo') {
+                    $('#panelEfectivo').slideDown();
+                } else {
+                    $('#panelEfectivo').slideUp();
+                }
+            });
+
+            $('#txtMontoRecibido').on('input', function() {
+                calcularVuelto();
+            });
+
+            function calcularVuelto() {
+                let recibido = parseFloat($('#txtMontoRecibido').val());
+                if (isNaN(recibido)) recibido = 0;
+                let vuelto = recibido - _total;
+                if (vuelto < 0) vuelto = 0;
+                $('#txtVuelto').val(vuelto.toFixed(2));
+            }
+
+            // 5. BOTÓN PROCESAR VENTA (MODIFICADO PARA TICKET)
+            $('#btnTerminar').click(function() {
+                if (_productosLista.length === 0) {
+                    Swal.fire('Carrito Vacío', 'Agregue productos antes de vender', 'warning');
+                    return;
+                }
+
+                var metodoPagoSelected = $('input[name="metodoPago"]:checked').val() || 'Efectivo';
+                
+                if (metodoPagoSelected === 'Efectivo') {
+                    let recibido = parseFloat($('#txtMontoRecibido').val());
+                    if (isNaN(recibido) || recibido < _total) {
+                        Swal.fire('Efectivo Insuficiente', 'El monto recibido debe ser mayor o igual al total a cobrar.', 'warning');
+                        return;
+                    }
+                }
+
+                var venta = {
+                    ClienteId: $('#cboCliente').val(),
+                    Total: _total,
+                    Descuento: _descuento,
+                    MetodoPago: metodoPagoSelected,
+                    Detalles: _productosLista
+                };
+
+                Swal.fire({
+                    title: '¿Procesar Venta?',
+                    text: `Total a cobrar: S/. ${_total.toFixed(2)}`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, Cobrar',
+                    confirmButtonColor: '#198754',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        
+                        // Enviamos al servidor
+                        $.ajax({
+                            url: '@Url.Action("Registrar", "Ventas")',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(venta),
+                            success: function(resp) {
+                                if (resp.exito) {
+                                    // --- LÓGICA DE TICKET ---
+                                    // Limpiamos todo primero
+                                    _productosLista = [];
+                                    _descuento = 0;
+                                    $('#txtDescuento').val('0.00');
+                                    $('#txtMontoRecibido').val('');
+                                    $('#txtVuelto').val('0.00');
+                                    renderizarCarrito();
+                                    $('#cboCliente').val(null).trigger('change');
+
+                                    // Preguntamos si quiere imprimir
+                                    Swal.fire({
+                                        title: '¡Venta Exitosa!',
+                                        text: "¿Deseas imprimir el ticket?",
+                                        icon: 'success',
+                                        showCancelButton: true,
+                                        confirmButtonText: '<i class="fas fa-print"></i> Imprimir Ticket',
+                                        cancelButtonText: 'Nueva Venta',
+                                        confirmButtonColor: '#0d6efd',
+                                        cancelButtonColor: '#6c757d'
+                                    }).then((printResult) => {
+                                        if (printResult.isConfirmed) {
+                                            // Redirigimos al ticket en otra pestaña usando el string devuelto con la ruta
+                                            window.open('@Url.Action("Ticket", "Ventas")/' + resp.idVenta, '_blank');
+                                        }
+                                    });
+
+                                } else {
+                                    Swal.fire('Error', resp.mensaje, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'Error de conexión', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+        });
+
+        // FUNCIONES AUXILIARES
+        function renderizarCarrito() {
+            $('#tablaDetalle').html('');
+            _subtotal = 0;
+
+            if (_productosLista.length > 0) {
+                $('#emptyState').hide();
+                
+                $.each(_productosLista, function(i, item) {
+                    _subtotal += item.Total;
+                    
+                    var fila = `
+                        <tr>
+                            <td class="ps-3 fw-bold small">${item.Nombre}</td>
+                            <td class="text-center">${item.Cantidad}</td>
+                            <td class="text-end">${item.Precio.toFixed(2)}</td>
+                            <td class="text-end fw-bold">${item.Total.toFixed(2)}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm text-danger" onclick="eliminarProducto(${i})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#tablaDetalle').append(fila);
+                });
+            } else {
+                $('#emptyState').show();
+            }
+
+            _total = _subtotal - _descuento;
+            if (_total < 0) { _total = 0; }
+
+            $('#lblTotalGrande').text('S/. ' + _total.toFixed(2));
+            $('#badgeCount').text(_productosLista.length + ' items');
+            
+            if(typeof calcularVuelto === "function") {
+                calcularVuelto();
+            }
+        }
+
+        function eliminarProducto(index) {
+            _productosLista.splice(index, 1);
+            renderizarCarrito();
+        }
+    </script>
+}

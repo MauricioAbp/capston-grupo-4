@@ -1,0 +1,415 @@
+@model MiniMarket.Web.Models.DashboardViewModel
+@using MiniMarket.Web.Data
+@inject ApplicationDbContext _context
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var configuracion = _context.Configuraciones.FirstOrDefault();
+    var simboloMoneda = configuracion?.MonedaSimbolo ?? "S/.";
+}
+
+<style>
+    .card-kpi {
+        border: none;
+        border-radius: 15px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .card-kpi:hover {
+        transform: translateY(-5px);
+    }
+    .card-kpi .icon-bg {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 4rem;
+        opacity: 0.2;
+    }
+    .card-kpi h2 { font-weight: bold; margin: 0; font-size: 2.5rem; }
+    .card-kpi p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+
+    /* Colores degradados corporativos */
+    .bg-kpi-1 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .bg-kpi-2 { background: linear-gradient(135deg, #10b981, #059669); }
+    .bg-kpi-3 { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+    .bg-kpi-4 { background: linear-gradient(135deg, #334155, #0f172a); }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark">Resumen Ejecutivo</h2>
+        <p class="text-muted">Estado actual de tu negocio</p>
+    </div>
+    <div class="bg-white p-2 rounded shadow-sm border text-muted">
+        <i class="fas fa-calendar-alt me-2"></i> @DateTime.Now.ToString("dd MMMM, yyyy")
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card card-kpi bg-kpi-1 p-4 h-100">
+            <div class="d-flex align-items-center justify-content-between">
+                <div style="z-index: 2;">
+                    <h2>@Model.VentasHoy.ToString("N0")</h2> 
+                    <p class="fw-bold">Ventas de Hoy</p>
+                    <small class="text-white-50">@simboloMoneda @Model.VentasHoy.ToString("N2")</small>
+                </div>
+                <i class="fas fa-shopping-basket icon-bg"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-kpi bg-kpi-2 p-4 h-100">
+            <div style="z-index: 2;">
+                <h2>@Model.TotalProductos</h2>
+                <p class="fw-bold">Productos Activos</p>
+            </div>
+            <i class="fas fa-box-open icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-kpi bg-kpi-3 p-4 h-100">
+            <div style="z-index: 2;">
+                <h2>@Model.TotalCategorias</h2>
+                <p class="fw-bold">Categorías</p>
+            </div>
+            <i class="fas fa-tags icon-bg"></i>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-kpi bg-kpi-4 p-4 h-100">
+            <div style="z-index: 2;">
+                <h2>@simboloMoneda @Model.CapitalEstimado.ToString("N0")</h2>
+                <p class="fw-bold">Capital Estimado</p>
+            </div>
+            <i class="fas fa-wallet icon-bg"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>Tendencia de Ingresos</h6>
+                <span class="badge bg-light text-primary border">Últimos 7 días</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="graficoVentas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="m-0 fw-bold text-success"><i class="fas fa-chart-pie me-2"></i>Top Productos</h6>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <div style="height: 250px; width: 100%; position: relative;">
+                    <canvas id="graficoTop"></canvas>
+                </div>
+                <div class="mt-3 text-center">
+                    <small class="text-muted">Distribución de los 5 más vendidos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Panel de Alertas: Productos con Stock Bajo *@
+@if (Model.ProductosStockBajo != null && Model.ProductosStockBajo.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow" style="border-radius: 15px; border-left: 4px solid #dc3545 !important;">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ⚠️ Alertas de Stock Bajo
+                        <span class="badge bg-danger ms-2">@Model.ProductosStockBajo.Count producto(s)</span>
+                    </h6>
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <a asp-controller="Productos" asp-action="Index" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-boxes me-1"></i>Gestionar Inventario
+                        </a>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Producto</th>
+                                    <th class="text-center">Stock Actual</th>
+                                    <th class="text-center">Stock Mínimo</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.ProductosStockBajo)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold">@p.Nombre</td>
+                                        <td class="text-center">
+                                            @if (p.Stock == 0)
+                                            {
+                                                <span class="badge bg-dark">SIN STOCK</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">@p.Stock unid.</span>
+                                            }
+                                        </td>
+                                        <td class="text-center text-muted">@p.StockMinimo unid.</td>
+                                        <td class="text-center">
+                                            @if (p.Stock == 0)
+                                            {
+                                                <span class="badge bg-dark"><i class="fas fa-times-circle me-1"></i>Agotado</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Stock crítico</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="m-0 fw-bold text-info"><i class="fas fa-calendar-check me-2"></i>Comparativo Mensual</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold">Mes Actual</small>
+                        <h4 class="mb-0 text-dark fw-bold">@simboloMoneda @Model.VentasMesActual.ToString("N2")</h4>
+                    </div>
+                    <div>
+                        @if(Model.PorcentajeCrecimiento >= 0) {
+                            <span class="badge bg-success" style="font-size: 1.2rem;">
+                                <i class="fas fa-arrow-up me-1"></i> @Model.PorcentajeCrecimiento.ToString("N1")%
+                            </span>
+                        } else {
+                            <span class="badge bg-danger" style="font-size: 1.2rem;">
+                                <i class="fas fa-arrow-down me-1"></i> @Model.PorcentajeCrecimiento.ToString("N1")%
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold">Mes Anterior</small>
+                        <h5 class="mb-0 text-secondary">@simboloMoneda @Model.VentasMesAnterior.ToString("N2")</h5>
+                    </div>
+                </div>
+                
+                <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress-bar @(Model.PorcentajeCrecimiento >= 0 ? "bg-success" : "bg-danger")" role="progressbar" style="width: @(Math.Abs(Model.PorcentajeCrecimiento) > 100 ? 100 : Math.Abs(Model.PorcentajeCrecimiento))%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="m-0 fw-bold text-primary"><i class="fas fa-users me-2"></i>Ventas por Cajero (Mes Actual)</h6>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    @if(Model.VentasPorCajero.Count == 0)
+                    {
+                        <li class="list-group-item text-center text-muted py-4">No hay ventas registradas este mes</li>
+                    }
+                    @foreach(var item in Model.VentasPorCajero.Take(5))
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle p-2 me-3">
+                                    <i class="fas fa-user-circle text-primary fa-lg"></i>
+                                </div>
+                                <span class="fw-bold text-dark">@item.Key</span>
+                            </div>
+                            <span class="badge bg-primary rounded-pill p-2" style="font-size: 0.9rem;">
+                                @simboloMoneda @item.Value.ToString("N2")
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ============================================
+        // 1. GRÁFICO DE LÍNEAS (INGRESOS)
+        // ============================================
+        var ctxLine = document.getElementById('graficoVentas').getContext('2d');
+        
+        var gradientBlue = ctxLine.createLinearGradient(0, 0, 0, 400);
+        gradientBlue.addColorStop(0, 'rgba(37, 99, 235, 0.35)');
+        gradientBlue.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.FechasGrafico)),
+                datasets: [{
+                    label: 'Ingresos (@simboloMoneda)',
+                    data: @Html.Raw(Json.Serialize(Model.VentasGrafico)),
+                    backgroundColor: gradientBlue,
+                    borderColor: '#2563eb',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#2563eb',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5] },
+                        ticks: { callback: function(value) { return '@simboloMoneda ' + value; } }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // ============================================
+        // 2. GRÁFICO DONUT (TOP PRODUCTOS) - CORREGIDO
+        // ============================================
+        var ctxDonut = document.getElementById('graficoTop').getContext('2d');
+        
+        var _nombres = @Html.Raw(Json.Serialize(Model.TopProductosNombres));
+        var _cantidades = @Html.Raw(Json.Serialize(Model.TopProductosCantidades));
+        
+        var isEmpty = _nombres.length === 0;
+        if(isEmpty) {
+            _nombres = ["Sin ventas aún"];
+            _cantidades = [1];
+        }
+
+        new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: _nombres,
+                datasets: [{
+                    data: _cantidades,
+                    backgroundColor: isEmpty ? ['#e9ecef'] : [ 
+                        '#2563eb', '#059669', '#0ea5e9', '#6366f1', '#64748b' 
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                layout: {
+                    padding: 10 
+                },
+                plugins: {
+                    legend: { 
+                        display: !isEmpty, 
+                        position: 'bottom',
+                        labels: { 
+                            usePointStyle: true, 
+                            boxWidth: 8,
+                            padding: 15,
+                            font: { size: 11 },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        let text = label;
+                                        if (text.length > 18) { text = text.substring(0, 18) + '...'; } 
+                                        const ds = data.datasets[0];
+                                        return {
+                                            text: text,
+                                            fillStyle: ds.backgroundColor[i],
+                                            strokeStyle: ds.borderColor[i],
+                                            lineWidth: ds.borderWidth,
+                                            hidden: isNaN(ds.data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        } 
+                    },
+                    tooltip: {
+                        enabled: !isEmpty,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.parsed;
+                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} Und. (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [{
+                id: 'textCenter',
+                beforeDraw: function(chart) {
+                    if (isEmpty) return;
+                    var width = chart.width, height = chart.height, ctx = chart.ctx;
+                    ctx.restore();
+                    var fontSize = (height / 140).toFixed(2);
+                    ctx.font = "bold " + fontSize + "em sans-serif";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "#333";
+                    
+                    let totalTop = _cantidades.reduce((a, b) => a + b, 0);
+                    
+                    var text = totalTop.toString(), textX = Math.round((width - ctx.measureText(text).width) / 2), textY = height / 2.1;
+                    ctx.fillText(text, textX, textY);
+                    
+                    ctx.font = "normal " + (fontSize*0.5).toFixed(2) + "em sans-serif";
+                    ctx.fillStyle = "#6c757d";
+                    var text2 = "Unidades", text2X = Math.round((width - ctx.measureText(text2).width) / 2), text2Y = height / 1.75;
+                    ctx.fillText(text2, text2X, text2Y);
+                    ctx.save();
+                }
+            }]
+        });
+    </script>
+}
